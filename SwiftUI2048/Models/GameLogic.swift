@@ -219,7 +219,7 @@ final class GameLogic : ObservableObject {
             if success == true {
                 print("Saved to photos")
             } else {
-                print("Error exporting clip to Photos")
+                print("Error exporting clip to Photos:%@",error ?? "")
             }
         }
     }
