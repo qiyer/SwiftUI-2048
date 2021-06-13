@@ -9,8 +9,7 @@ This is a simple game to demonstrate the new SwiftUI framework.
 ## Supported Platforms
 
 * iOS 13.0+
-* macOS 10.15+
-* macOS 12 bata
+* macOS 12 beta
 
 ## License
 
