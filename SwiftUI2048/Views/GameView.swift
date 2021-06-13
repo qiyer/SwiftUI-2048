@@ -27,6 +27,7 @@ extension Edge {
 
 struct GameView : View {
     
+    @State var isClipActive: Bool = false
     @State var ignoreGesture = false
     @EnvironmentObject var gameLogic: GameLogic
     
@@ -55,7 +56,7 @@ struct GameView : View {
     var gestureEnabled: Bool {
         // Existed for future usage.
 #if os(macOS) || targetEnvironment(macCatalyst)
-        return false
+        return true
 #else
         return true
 #endif
@@ -105,13 +106,36 @@ struct GameView : View {
                             .font(Font.system(size: 48).weight(.black))
                             .foregroundColor(Color(red:0.47, green:0.43, blue:0.40, opacity:1.00))
                             .offset(layoutTraits.bannerOffset)
+                        
+                        HStack(alignment: .center) {
+                            Button.init(action: {
+                                self.isClipActive.toggle()
+                                self.gameLogic.setClipState(isClipActive: self.isClipActive)
+                            } ) {
+                                Text(self.isClipActive ? "关闭Clip精彩瞬间录制":"开启Clip精彩瞬间录制")
+                                .foregroundColor(Color(red:0.47, green:0.43, blue:0.40, opacity:1.00))
+                            }
+                            .background(self.isClipActive ? Color.blue:Color.gray)
+                            .cornerRadius(5)
+                                        
+                            Button.init(action: {
+                                self.gameLogic.exportClip()
+                            } ) {
+                                Text("导出Clip精彩瞬间")
+                                .foregroundColor(Color(red:0.47, green:0.43, blue:0.40, opacity:1.00))
+                            }
+                            .background(Color.gray)
+                            .cornerRadius(5)
+                        }
                     }
                     
                     ZStack(alignment: .center) {
                         BlockGridView(matrix: self.gameLogic.blockMatrix,
                                       blockEnterEdge: .from(self.gameLogic.lastGestureDirection))
+                        
                     }
                     .frame(width: proxy.size.width, height: proxy.size.height, alignment: .center)
+                    
                 }
                 .frame(width: proxy.size.width, height: proxy.size.height, alignment: .center)
                 .background(

@@ -9,6 +9,8 @@
 import Foundation
 import SwiftUI
 import Combine
+import ReplayKit
+import Photos
 
 final class GameLogic : ObservableObject {
     
@@ -18,7 +20,7 @@ final class GameLogic : ObservableObject {
         case up
         case down
     }
-    
+        
     typealias BlockMatrixType = BlockMatrix<IdentifiedBlock>
     
     let objectWillChange = PassthroughSubject<GameLogic, Never>()
@@ -161,6 +163,65 @@ final class GameLogic : ObservableObject {
         _blockMatrix.place(IdentifiedBlock(id: newGlobalID, number: 2), to: blankLocations[placeLocIndex])
         
         return true
+    }
+    
+    func setClipState(isClipActive: Bool){
+        isClipActive ? startClipBuffering():stopClipBuffering()
+    }
+    
+    func startClipBuffering() {
+        RPScreenRecorder.shared().startClipBuffering { (error) in
+            if error != nil {
+                print("Error attempting to start Clip Buffering")
+                
+            }
+        }
+    }
+    
+    func stopClipBuffering() {
+        RPScreenRecorder.shared().stopClipBuffering { (error) in
+            if error != nil {
+                print("Error attempting to stop Clip Buffering")
+            }
+        }
+    }
+    
+    func getDirectory() -> URL {
+        var tempPath = URL(fileURLWithPath: NSTemporaryDirectory())
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd-hh-mm-ss"
+        let stringDate = formatter.string(from: Date())
+        print(stringDate)
+        tempPath.appendPathComponent(String.localizedStringWithFormat("2048-clip-%@.mp4", stringDate))
+        return tempPath
+    }
+    
+    func exportClip() {
+        let clipURL = getDirectory()
+        let interval = TimeInterval(8)
+    
+        print("Generating clip at URL: ", clipURL)
+        RPScreenRecorder.shared().exportClip(to: clipURL, duration: interval) { error in
+            if error != nil {
+                print("Error attempting to start Clip Buffering")
+            } else {
+                // There isn't an error, so save the clip at the URL to Photos.
+                self.saveToPhotos(tempURL: clipURL)
+            }
+        }
+    }
+    
+    func saveToPhotos(tempURL: URL) {
+        print("saveToPhotos clip at URL: ", tempURL)
+        PHPhotoLibrary.shared().performChanges {
+            PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: tempURL)
+        } completionHandler: { success, error in
+            if success == true {
+                print("Saved to photos")
+            } else {
+                print("Error exporting clip to Photos")
+            }
+        }
     }
     
 //    fileprivate func forEachBlockIndices(mode: ForEachMode = .rowByRow,
